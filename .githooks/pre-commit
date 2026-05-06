@@ -1,0 +1,17 @@
+#!/bin/sh
+
+echo "Running code formatter..."
+./gradlew ktlintFormat
+
+echo "Restaging formatted Kotlin files..."
+git add '*.kt' '*.kts' 2>/dev/null
+
+echo "Running full project verification..."
+./gradlew check
+
+if [ $? -ne 0 ]; then
+  echo "Commit blocked: quality checks failed."
+  exit 1
+fi
+
+exit 0

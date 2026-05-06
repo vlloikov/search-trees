@@ -1,0 +1,34 @@
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+
+processors:
+  active: true
+
+console-reports:
+  active: true
+
+output-reports:
+  active: true
+
+complexity:
+  LongMethod:
+    threshold: 40
+  LongParameterList:
+    functionThreshold: 5
+  NestedBlockDepth:
+    threshold: 4
+  TooManyFunctions:
+    thresholdInFiles: 20
+
+style:
+  MagicNumber:
+    active: false
+  WildcardImport:
+    active: false
+
+naming:
+  FunctionNaming:
+    functionPattern: '[a-z][a-zA-Z0-9]*'
