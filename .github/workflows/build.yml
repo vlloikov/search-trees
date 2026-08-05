@@ -77,7 +77,7 @@ jobs:
       - run: chmod +x gradlew
 
       - name: Generate Dokka
-        run: ./gradlew dokkaHtml
+        run: ./gradlew dokkaGenerateHtml
 
       - name: Upload Documentation
         uses: actions/upload-artifact@v4

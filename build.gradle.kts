@@ -64,3 +64,17 @@ tasks.register("formatCode") {
 	group = "formatting"
 	dependsOn("ktlintFormat")
 }
+
+tasks.register("ci") {
+	group = "verification"
+	description = "Runs all checks performed in GitHub Actions."
+
+	dependsOn(
+		"ktlintCheck",
+		"detekt",
+		"test",
+		"koverHtmlReport",
+		"dokkaGenerateHtml",
+		"assemble",
+	)
+}
