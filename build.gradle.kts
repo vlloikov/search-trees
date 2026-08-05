@@ -3,8 +3,10 @@ plugins {
 	`java-library`
 	`maven-publish`
 
-	id("org.jlleitschuh.gradle.ktlint") version "12.1.2" // For code formatting
-	id("io.gitlab.arturbosch.detekt") version "1.23.8" // For static code analysis
+	id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
+	id("io.gitlab.arturbosch.detekt") version "1.23.8"
+	id("org.jetbrains.dokka") version "2.2.0"
+	id("org.jetbrains.kotlinx.kover") version "0.9.9"
 }
 
 group = property("group")!!
@@ -61,4 +63,18 @@ tasks.register("verifyCodeQuality") {
 tasks.register("formatCode") {
 	group = "formatting"
 	dependsOn("ktlintFormat")
+}
+
+tasks.register("ci") {
+	group = "verification"
+	description = "Runs all checks performed in GitHub Actions."
+
+	dependsOn(
+		"ktlintCheck",
+		"detekt",
+		"test",
+		"koverHtmlReport",
+		"dokkaGenerateHtml",
+		"assemble",
+	)
 }
