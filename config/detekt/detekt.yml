@@ -16,8 +16,11 @@ complexity:
     allowedDepth: 4
   TooManyFunctions:
     allowedFunctionsPerFile: 20
+    ignorePrivate: true
 
 style:
+  ReturnCount:
+    max: 3
   MagicNumber:
     active: false
   WildcardImport:
