@@ -4,7 +4,7 @@ plugins {
 	`maven-publish`
 
 	id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
-	id("io.gitlab.arturbosch.detekt") version "1.23.8"
+	id("dev.detekt") version "2.0.0-alpha.6"
 	id("org.jetbrains.dokka") version "2.2.0"
 	id("org.jetbrains.kotlinx.kover") version "0.9.9"
 }
