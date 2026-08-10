@@ -1,6 +1,3 @@
-build:
-  maxIssues: 0
-
 config:
   validation: true
 
@@ -10,18 +7,15 @@ processors:
 console-reports:
   active: true
 
-output-reports:
-  active: true
-
 complexity:
   LongMethod:
-    threshold: 40
+    allowedLines: 40
   LongParameterList:
-    functionThreshold: 5
+    allowedFunctionParameters: 5
   NestedBlockDepth:
-    threshold: 4
+    allowedDepth: 4
   TooManyFunctions:
-    thresholdInFiles: 20
+    allowedFunctionsPerFile: 20
 
 style:
   MagicNumber:
