@@ -20,10 +20,21 @@ public class BinarySearchTree<K : Comparable<K>, V> : SearchTree<K, V> {
 
 	override fun find(key: K): TreeNode<K, V>? = findNode(key)
 
-	override fun min(): TreeNode<K, V>? = TODO("Implemented during stage 2")
+	override fun min(): TreeNode<K, V>? {
+		var current = root ?: return null
 
-	override fun max(): TreeNode<K, V>? = TODO("Implemented during stage 2")
+		while (true) {
+			current = current.left ?: return current
+		}
+	}
 
+	override fun max(): TreeNode<K, V>? {
+		var current = root ?: return null
+
+		while (true) {
+			current = current.right ?: return current
+		}
+	}
 	override fun insert(
 		key: K,
 		value: V,
