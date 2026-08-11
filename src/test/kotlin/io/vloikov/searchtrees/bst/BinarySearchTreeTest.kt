@@ -224,4 +224,85 @@ class BinarySearchTreeTest {
 		assertEquals(2, tree.min()?.key)
 		assertEquals(20, tree.max()?.key)
 	}
+
+	@Test
+	fun iteratorIsEmptyForEmptyTree() {
+		val tree = BinarySearchTree<Int, String>()
+
+		assertTrue(tree.toList().isEmpty())
+	}
+
+	@Test
+	fun iteratorReturnsOnlyNode() {
+		val tree = BinarySearchTree<Int, String>()
+		tree.insert(10, "root")
+
+		val nodes = tree.toList()
+
+		assertEquals(listOf(10), nodes.map { node -> node.key })
+		assertEquals(listOf("root"), nodes.map { node -> node.value })
+	}
+
+	@Test
+	fun iteratorReturnsNodesInAscendingKeyOrder() {
+		val tree = BinarySearchTree<Int, String>()
+		listOf(10, 5, 15, 2, 7, 12, 20).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val nodes = tree.toList()
+
+		assertEquals(listOf(2, 5, 7, 10, 12, 15, 20), nodes.map { node -> node.key })
+		assertEquals(listOf("2", "5", "7", "10", "12", "15", "20"), nodes.map { node -> node.value })
+	}
+
+	@Test
+	fun iteratorHandlesLeftSkewedTree() {
+		val tree = BinarySearchTree<Int, String>()
+		listOf(5, 4, 3, 2, 1).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		assertEquals(listOf(1, 2, 3, 4, 5), tree.map { node -> node.key })
+	}
+
+	@Test
+	fun iteratorHandlesRightSkewedTree() {
+		val tree = BinarySearchTree<Int, String>()
+		listOf(1, 2, 3, 4, 5).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		assertEquals(listOf(1, 2, 3, 4, 5), tree.map { node -> node.key })
+	}
+
+	@Test
+	fun iteratorWorksAfterRemoval() {
+		val tree = BinarySearchTree<Int, String>()
+		listOf(10, 5, 20, 2, 8, 6, 7, 9).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+		tree.remove(5)
+
+		assertEquals(listOf(2, 6, 7, 8, 9, 10, 20), tree.map { node -> node.key })
+	}
+
+	@Test
+	fun keysAndValuesFollowAscendingKeyOrder() {
+		val tree = BinarySearchTree<Int, String>()
+		tree.insert(10, "ten")
+		tree.insert(5, "five")
+		tree.insert(15, "fifteen")
+
+		assertEquals(listOf(5, 10, 15), tree.keys().toList())
+		assertEquals(listOf("five", "ten", "fifteen"), tree.values().toList())
+	}
+
+	@Test
+	fun keysAndValuesAreEmptyForEmptyTree() {
+		val tree = BinarySearchTree<Int, String>()
+
+		assertTrue(tree.keys().toList().isEmpty())
+		assertTrue(tree.values().toList().isEmpty())
+	}
 }

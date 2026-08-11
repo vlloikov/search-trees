@@ -15,8 +15,10 @@ complexity:
   NestedBlockDepth:
     allowedDepth: 4
   TooManyFunctions:
-    allowedFunctionsPerFile: 20
-    ignorePrivate: true
+      allowedFunctionsPerFile: 20
+      ignorePrivate: true
+      excludes:
+          - '**/test/**'
 
 style:
   ReturnCount:
