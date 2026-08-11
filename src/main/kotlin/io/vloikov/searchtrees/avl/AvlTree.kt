@@ -6,27 +6,54 @@ import io.vloikov.searchtrees.TreeNode
 /**
  * A height-balanced AVL search tree.
  *
- * The algorithms are introduced during the implementation stage. This class currently defines the agreed public
- * contract only.
+ * Keys are ordered using their natural order. Inserting a key that already exists replaces its associated value.
  */
 public class AvlTree<K : Comparable<K>, V> : SearchTree<K, V> {
-	override val size: Int
-		get() = TODO("Implemented during stage 2")
+	internal var root: AvlNode<K, V>? = null
+		private set
 
-	override fun isEmpty(): Boolean = TODO("Implemented during stage 2")
+	override var size: Int = 0
+		private set
 
-	override fun contains(key: K): Boolean = TODO("Implemented during stage 2")
+	override fun isEmpty(): Boolean = size == 0
 
-	override fun find(key: K): TreeNode<K, V>? = TODO("Implemented during stage 2")
+	override fun contains(key: K): Boolean = findNode(key) != null
 
-	override fun min(): TreeNode<K, V>? = TODO("Implemented during stage 2")
+	override fun find(key: K): TreeNode<K, V>? = findNode(key)
 
-	override fun max(): TreeNode<K, V>? = TODO("Implemented during stage 2")
+	override fun min(): TreeNode<K, V>? {
+		var current = root ?: return null
+
+		while (true) {
+			current = current.left ?: return current
+		}
+	}
+
+	override fun max(): TreeNode<K, V>? {
+		var current = root ?: return null
+
+		while (true) {
+			current = current.right ?: return current
+		}
+	}
 
 	override fun insert(
 		key: K,
 		value: V,
-	): V? = TODO("Implemented during stage 2")
+	): V? {
+		val existingNode = findNode(key)
+
+		if (existingNode != null) {
+			val previousValue = existingNode.value
+			existingNode.value = value
+			return previousValue
+		}
+
+		root = insertNode(root, key, value)
+		size++
+
+		return null
+	}
 
 	override fun remove(key: K): V? = TODO("Implemented during stage 2")
 
@@ -35,4 +62,100 @@ public class AvlTree<K : Comparable<K>, V> : SearchTree<K, V> {
 	override fun values(): Sequence<V> = TODO("Implemented during stage 2")
 
 	override fun iterator(): Iterator<TreeNode<K, V>> = TODO("Implemented during stage 2")
+
+	private fun insertNode(
+		node: AvlNode<K, V>?,
+		key: K,
+		value: V,
+	): AvlNode<K, V> {
+		if (node == null) {
+			return AvlNode(key, value)
+		}
+
+		if (key.compareTo(node.key) < 0) {
+			node.left = insertNode(node.left, key, value)
+		} else {
+			node.right = insertNode(node.right, key, value)
+		}
+
+		return balance(node)
+	}
+
+	private fun findNode(key: K): AvlNode<K, V>? {
+		var current = root
+
+		while (current != null) {
+			val comparison = key.compareTo(current.key)
+
+			current =
+				when {
+					comparison < 0 -> current.left
+					comparison > 0 -> current.right
+					else -> return current
+				}
+		}
+
+		return null
+	}
+
+	private fun height(node: AvlNode<K, V>?): Int = node?.height ?: 0
+
+	private fun updateHeight(node: AvlNode<K, V>) {
+		node.height = maxOf(height(node.left), height(node.right)) + 1
+	}
+
+	private fun balanceFactor(node: AvlNode<K, V>): Int = height(node.left) - height(node.right)
+
+	private fun rotateRight(node: AvlNode<K, V>): AvlNode<K, V> {
+		val newRoot = checkNotNull(node.left)
+
+		node.left = newRoot.right
+		newRoot.right = node
+
+		updateHeight(node)
+		updateHeight(newRoot)
+
+		return newRoot
+	}
+
+	private fun rotateLeft(node: AvlNode<K, V>): AvlNode<K, V> {
+		val newRoot = checkNotNull(node.right)
+
+		node.right = newRoot.left
+		newRoot.left = node
+
+		updateHeight(node)
+		updateHeight(newRoot)
+
+		return newRoot
+	}
+
+	private fun balance(node: AvlNode<K, V>): AvlNode<K, V> {
+		updateHeight(node)
+		val factor = balanceFactor(node)
+
+		return when {
+			factor > 1 -> {
+				val leftChild = checkNotNull(node.left)
+
+				if (balanceFactor(leftChild) < 0) {
+					node.left = rotateLeft(leftChild)
+				}
+
+				rotateRight(node)
+			}
+
+			factor < -1 -> {
+				val rightChild = checkNotNull(node.right)
+
+				if (balanceFactor(rightChild) > 0) {
+					node.right = rotateRight(rightChild)
+				}
+
+				rotateLeft(node)
+			}
+
+			else -> node
+		}
+	}
 }
