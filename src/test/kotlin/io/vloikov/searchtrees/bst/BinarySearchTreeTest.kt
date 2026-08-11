@@ -112,4 +112,116 @@ class BinarySearchTreeTest {
 		assertEquals(20, tree.max()?.key)
 		assertEquals("maximum", tree.max()?.value)
 	}
+
+	@Test
+	fun removeMissingKeyDoesNotChangeTree() {
+		val tree = BinarySearchTree<Int, String>()
+		tree.insert(10, "root")
+		tree.insert(5, "left")
+
+		val removedValue = tree.remove(99)
+
+		assertNull(removedValue)
+		assertEquals(2, tree.size)
+		assertTrue(10 in tree)
+		assertTrue(5 in tree)
+	}
+
+	@Test
+	fun removeOnlyNodeMakesTreeEmpty() {
+		val tree = BinarySearchTree<Int, String>()
+		tree.insert(10, "root")
+
+		val removedValue = tree.remove(10)
+
+		assertEquals("root", removedValue)
+		assertTrue(tree.isEmpty())
+		assertEquals(0, tree.size)
+		assertFalse(10 in tree)
+		assertNull(tree.min())
+		assertNull(tree.max())
+	}
+
+	@Test
+	fun removeLeafKeepsOtherNodes() {
+		val tree = BinarySearchTree<Int, String>()
+		tree.insert(10, "root")
+		tree.insert(5, "left")
+		tree.insert(15, "leaf")
+
+		val removedValue = tree.remove(15)
+
+		assertEquals("leaf", removedValue)
+		assertEquals(2, tree.size)
+		assertFalse(15 in tree)
+		assertTrue(10 in tree)
+		assertTrue(5 in tree)
+	}
+
+	@Test
+	fun removeNodeWithLeftChildPromotesChild() {
+		val tree = BinarySearchTree<Int, String>()
+		tree.insert(10, "root")
+		tree.insert(5, "removed")
+		tree.insert(2, "child")
+
+		val removedValue = tree.remove(5)
+
+		assertEquals("removed", removedValue)
+		assertEquals(2, tree.size)
+		assertFalse(5 in tree)
+		assertEquals("child", tree.find(2)?.value)
+		assertTrue(10 in tree)
+	}
+
+	@Test
+	fun removeNodeWithRightChildPromotesChild() {
+		val tree = BinarySearchTree<Int, String>()
+		tree.insert(10, "root")
+		tree.insert(5, "removed")
+		tree.insert(7, "child")
+
+		val removedValue = tree.remove(5)
+
+		assertEquals("removed", removedValue)
+		assertEquals(2, tree.size)
+		assertFalse(5 in tree)
+		assertEquals("child", tree.find(7)?.value)
+		assertTrue(10 in tree)
+	}
+
+	@Test
+	fun removeRootWithTwoChildrenUsesDirectSuccessor() {
+		val tree = BinarySearchTree<Int, String>()
+		tree.insert(10, "removed")
+		tree.insert(5, "left")
+		tree.insert(15, "successor")
+		tree.insert(20, "right")
+
+		val removedValue = tree.remove(10)
+
+		assertEquals("removed", removedValue)
+		assertEquals(3, tree.size)
+		assertFalse(10 in tree)
+		assertTrue(5 in tree)
+		assertTrue(15 in tree)
+		assertTrue(20 in tree)
+	}
+
+	@Test
+	fun removeNodeWithTwoChildrenPreservesSuccessorRightChild() {
+		val tree = BinarySearchTree<Int, String>()
+		listOf(10, 5, 20, 2, 8, 6, 7, 9).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(5)
+
+		assertEquals("5", removedValue)
+		assertEquals(7, tree.size)
+		assertFalse(5 in tree)
+		assertTrue(listOf(2, 6, 7, 8, 9, 10, 20).all { key -> key in tree })
+		assertEquals(2, tree.min()?.key)
+		assertEquals(20, tree.max()?.key)
+	}
 }

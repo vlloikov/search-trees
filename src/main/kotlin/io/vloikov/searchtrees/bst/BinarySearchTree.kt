@@ -78,13 +78,66 @@ public class BinarySearchTree<K : Comparable<K>, V> : SearchTree<K, V> {
 		}
 	}
 
-	override fun remove(key: K): V? = TODO("Implemented during stage 2")
+	override fun remove(key: K): V? {
+		var parent: BinarySearchNode<K, V>? = null
+		var current = root
+
+		while (current != null) {
+			val comparison = key.compareTo(current.key)
+			if (comparison == 0) {
+				break
+			}
+
+			parent = current
+			current = if (comparison < 0) current.left else current.right
+		}
+
+		val node = current ?: return null
+		val removedValue = node.value
+		val replacement = replacementFor(node)
+
+		when {
+			parent == null -> root = replacement
+			parent.left === node -> parent.left = replacement
+			else -> parent.right = replacement
+		}
+
+		node.left = null
+		node.right = null
+		size--
+		return removedValue
+	}
 
 	override fun keys(): Sequence<K> = TODO("Implemented during stage 2")
 
 	override fun values(): Sequence<V> = TODO("Implemented during stage 2")
 
 	override fun iterator(): Iterator<TreeNode<K, V>> = TODO("Implemented during stage 2")
+
+	private fun replacementFor(node: BinarySearchNode<K, V>): BinarySearchNode<K, V>? {
+		val leftChild = node.left
+		val rightChild = node.right
+		if (leftChild == null || rightChild == null) {
+			return leftChild ?: rightChild
+		}
+
+		var successorParent = node
+		var successor: BinarySearchNode<K, V> = rightChild
+
+		while (true) {
+			val next = successor.left ?: break
+			successorParent = successor
+			successor = next
+		}
+
+		if (successorParent !== node) {
+			successorParent.left = successor.right
+			successor.right = rightChild
+		}
+
+		successor.left = leftChild
+		return successor
+	}
 
 	private fun findNode(key: K): BinarySearchNode<K, V>? {
 		var current = root
