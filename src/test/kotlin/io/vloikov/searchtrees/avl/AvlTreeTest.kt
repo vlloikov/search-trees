@@ -143,6 +143,196 @@ class AvlTreeTest {
 		assertEquals("100", tree.max()?.value)
 	}
 
+	@Test
+	fun removeMissingKeyDoesNotChangeTree() {
+		val tree = AvlTree<Int, String>()
+		listOf(10, 5, 15).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(99)
+
+		assertNull(removedValue)
+		assertEquals(3, tree.size)
+		assertEquals(10, tree.root?.key)
+		assertTrue(listOf(5, 10, 15).all { key -> key in tree })
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeOnlyNodeMakesTreeEmpty() {
+		val tree = AvlTree<Int, String>()
+		tree.insert(10, "root")
+
+		val removedValue = tree.remove(10)
+
+		assertEquals("root", removedValue)
+		assertTrue(tree.isEmpty())
+		assertEquals(0, tree.size)
+		assertNull(tree.root)
+		assertFalse(10 in tree)
+		assertNull(tree.min())
+		assertNull(tree.max())
+	}
+
+	@Test
+	fun removeLeafKeepsOtherNodes() {
+		val tree = AvlTree<Int, String>()
+		listOf(10, 5, 15).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(15)
+
+		assertEquals("15", removedValue)
+		assertEquals(2, tree.size)
+		assertFalse(15 in tree)
+		assertTrue(5 in tree)
+		assertTrue(10 in tree)
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeNodeWithLeftChildPromotesChild() {
+		val tree = AvlTree<Int, String>()
+		listOf(10, 5, 15, 2).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(5)
+
+		assertEquals("5", removedValue)
+		assertEquals(3, tree.size)
+		assertFalse(5 in tree)
+		assertTrue(listOf(2, 10, 15).all { key -> key in tree })
+		assertEquals(2, tree.root?.left?.key)
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeNodeWithRightChildPromotesChild() {
+		val tree = AvlTree<Int, String>()
+		listOf(10, 5, 15, 20).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(15)
+
+		assertEquals("15", removedValue)
+		assertEquals(3, tree.size)
+		assertFalse(15 in tree)
+		assertTrue(listOf(5, 10, 20).all { key -> key in tree })
+		assertEquals(20, tree.root?.right?.key)
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeNodeWithTwoChildrenUsesDirectSuccessor() {
+		val tree = AvlTree<Int, String>()
+		listOf(20, 10, 30, 40).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(20)
+
+		assertEquals("20", removedValue)
+		assertEquals(3, tree.size)
+		assertFalse(20 in tree)
+		assertEquals(30, tree.root?.key)
+		assertEquals(10, tree.root?.left?.key)
+		assertEquals(40, tree.root?.right?.key)
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeNodeWithTwoChildrenPreservesSuccessorRightChild() {
+		val tree = AvlTree<Int, String>()
+		listOf(20, 10, 40, 30, 50, 25, 35, 27, 37).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		assertEquals(30, tree.root?.key)
+		assertEquals(35, tree.root?.right?.left?.key)
+		assertEquals(37, tree.root?.right?.left?.right?.key)
+
+		val removedValue = tree.remove(30)
+
+		assertEquals("30", removedValue)
+		assertEquals(8, tree.size)
+		assertFalse(30 in tree)
+		assertTrue(
+			listOf(10, 20, 25, 27, 35, 37, 40, 50)
+				.all { key -> key in tree },
+		)
+		assertEquals(35, tree.root?.key)
+		assertEquals(37, tree.root?.right?.left?.key)
+		assertEquals(10, tree.min()?.key)
+		assertEquals(50, tree.max()?.key)
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeBalancesLeftLeftCase() {
+		val tree = AvlTree<Int, String>()
+		listOf(4, 2, 5, 1, 3).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(5)
+
+		assertEquals("5", removedValue)
+		assertEquals(2, tree.root?.key)
+		assertTrue(listOf(1, 2, 3, 4).all { key -> key in tree })
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeBalancesRightRightCase() {
+		val tree = AvlTree<Int, String>()
+		listOf(2, 1, 4, 3, 5).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(1)
+
+		assertEquals("1", removedValue)
+		assertEquals(4, tree.root?.key)
+		assertTrue(listOf(2, 3, 4, 5).all { key -> key in tree })
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeBalancesLeftRightCase() {
+		val tree = AvlTree<Int, String>()
+		listOf(4, 2, 5, 3).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(5)
+
+		assertEquals("5", removedValue)
+		assertEquals(3, tree.root?.key)
+		assertEquals(2, tree.root?.left?.key)
+		assertEquals(4, tree.root?.right?.key)
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun removeBalancesRightLeftCase() {
+		val tree = AvlTree<Int, String>()
+		listOf(2, 1, 4, 3).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val removedValue = tree.remove(1)
+
+		assertEquals("1", removedValue)
+		assertEquals(3, tree.root?.key)
+		assertEquals(2, tree.root?.left?.key)
+		assertEquals(4, tree.root?.right?.key)
+		assertAvlInvariant(tree.root)
+	}
+
 	private fun assertBalancedThreeNodeTree(tree: AvlTree<Int, String>) {
 		val root = assertNotNull(tree.root)
 

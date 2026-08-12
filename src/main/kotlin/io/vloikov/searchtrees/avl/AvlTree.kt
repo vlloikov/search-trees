@@ -21,13 +21,7 @@ public class AvlTree<K : Comparable<K>, V> : SearchTree<K, V> {
 
 	override fun find(key: K): TreeNode<K, V>? = findNode(key)
 
-	override fun min(): TreeNode<K, V>? {
-		var current = root ?: return null
-
-		while (true) {
-			current = current.left ?: return current
-		}
-	}
+	override fun min(): TreeNode<K, V>? = root?.let { node -> minimumNode(node) }
 
 	override fun max(): TreeNode<K, V>? {
 		var current = root ?: return null
@@ -55,7 +49,18 @@ public class AvlTree<K : Comparable<K>, V> : SearchTree<K, V> {
 		return null
 	}
 
-	override fun remove(key: K): V? = TODO("Implemented during stage 2")
+	override fun remove(key: K): V? {
+		val removedNode = findNode(key) ?: return null
+		val removedValue = removedNode.value
+
+		root = removeNode(root, key)
+
+		removedNode.left = null
+		removedNode.right = null
+		size--
+
+		return removedValue
+	}
 
 	override fun keys(): Sequence<K> = TODO("Implemented during stage 2")
 
@@ -77,6 +82,59 @@ public class AvlTree<K : Comparable<K>, V> : SearchTree<K, V> {
 		} else {
 			node.right = insertNode(node.right, key, value)
 		}
+
+		return balance(node)
+	}
+
+	private fun removeNode(
+		node: AvlNode<K, V>?,
+		key: K,
+	): AvlNode<K, V>? {
+		node ?: return null
+
+		val comparison = key.compareTo(node.key)
+
+		return when {
+			comparison < 0 -> {
+				node.left = removeNode(node.left, key)
+				balance(node)
+			}
+
+			comparison > 0 -> {
+				node.right = removeNode(node.right, key)
+				balance(node)
+			}
+
+			else -> {
+				val leftChild = node.left
+				val rightChild = node.right
+
+				if (leftChild == null || rightChild == null) {
+					leftChild ?: rightChild
+				} else {
+					val successor = minimumNode(rightChild)
+
+					successor.right = removeMinimum(rightChild)
+					successor.left = leftChild
+
+					balance(successor)
+				}
+			}
+		}
+	}
+
+	private fun minimumNode(node: AvlNode<K, V>): AvlNode<K, V> {
+		var current = node
+
+		while (true) {
+			current = current.left ?: return current
+		}
+	}
+
+	private fun removeMinimum(node: AvlNode<K, V>): AvlNode<K, V>? {
+		val leftChild = node.left ?: return node.right
+
+		node.left = removeMinimum(leftChild)
 
 		return balance(node)
 	}
