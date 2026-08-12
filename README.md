@@ -1,37 +1,187 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-
 # Search Trees
 
-Search Trees is a Kotlin library that provides a common API for three binary search tree implementations:
+[![Build Pipeline](https://github.com/vlloikov/search-trees/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/vlloikov/search-trees/actions/workflows/build.yml)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![JVM](https://img.shields.io/badge/JVM-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/vlloikov/search-trees)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-- a binary search tree;
-- an AVL tree;
-- a red-black tree.
-
-Each tree stores unique key-value pairs. Keys implement `Comparable`, while values may be of any type.
+A Kotlin/JVM library that implements binary search trees behind a shared, type-safe API. Trees store unique key-value
+pairs, order keys through `Comparable`, and expose structural nodes as read-only views.
 
 ## Project status
 
-The project is currently at the architecture stage. Public contracts, implementation class skeletons, and internal node
-models are defined, but the tree algorithms are intentionally left for the next stage.
+Version `0.3.0` includes complete implementations of an unbalanced binary search tree and a height-balanced AVL tree.
+The red-black tree is the final planned implementation before the `1.0.0` release.
 
-## Planned operations
+| Implementation | Status | Height | Search, insertion, removal |
+|---|---|---:|---:|
+| `BinarySearchTree` | Implemented | `O(h)`, up to `O(n)` | `O(h)` |
+| `AvlTree` | Implemented | `O(log n)` | `O(log n)` |
+| `RedBlackTree` | Planned | `O(log n)` | `O(log n)` |
 
-Every tree supports the following common operations:
+`RedBlackTree` currently contains the agreed public skeleton and is not yet ready for use. The project remains in
+pre-`1.0` development until all three implementations are complete.
 
-- search for a node by key;
-- insert a new key-value pair or replace the value associated with an existing key;
-- remove a key-value pair;
-- check whether a key exists;
-- obtain the minimum and maximum nodes;
-- check whether the tree is empty;
-- iterate over nodes, keys, and values in ascending key order.
+## Features
 
-The complete API contract, class diagram, package layout, and design decisions are documented in
-[Architecture](docs/architecture.md).
+- one `SearchTree<K, V>` contract for every implementation;
+- insertion, replacement, search, removal, membership checks, minimum, and maximum;
+- lazy in-order iteration over nodes, keys, and values;
+- unique keys determined by `Comparable.compareTo`;
+- read-only public `TreeNode` views with balancing details kept internal;
+- AVL rotations and height restoration after insertion and removal;
+- unit tests for public behavior, structural cases, and AVL invariants;
+- automated formatting, static analysis, testing, coverage, documentation, and assembly.
 
+## Technology stack
 
+| Area | Technology |
+|---|---|
+| Language | Kotlin 2.3.20 |
+| Runtime | JVM 21 |
+| Build | Gradle 9.4.0 with Kotlin DSL and the Gradle Wrapper |
+| Testing | Kotlin Test and JUnit Platform |
+| Code quality | ktlint and Detekt |
+| Coverage | Kover |
+| API documentation | KDoc and Dokka |
+| Continuous integration | GitHub Actions |
+
+## Getting started
+
+Clone the repository and run the complete local verification pipeline:
+
+```bash
+git clone https://github.com/vlloikov/search-trees.git
+cd search-trees
+./gradlew ci
+```
+
+## Usage
+
+Both completed trees implement the same interface. Use `AvlTree` when logarithmic height must be maintained, or
+`BinarySearchTree` when an unbalanced implementation is sufficient.
+
+```kotlin
+import io.vloikov.searchtrees.SearchTree
+import io.vloikov.searchtrees.avl.AvlTree
+
+fun main() {
+	val tree: SearchTree<Int, String> = AvlTree()
+
+	tree.insert(40, "forty")
+	tree.insert(20, "twenty")
+	tree.insert(60, "sixty")
+	tree.insert(10, "ten")
+
+	println(tree.find(20)?.value) // twenty
+	println(60 in tree) // true
+	println(tree.min()?.key) // 10
+	println(tree.max()?.key) // 60
+
+	val previousValue = tree.insert(20, "updated")
+	println(previousValue) // twenty
+
+	println(tree.keys().toList()) // [10, 20, 40, 60]
+	println(tree.values().toList()) // [ten, updated, forty, sixty]
+
+	for (node in tree) {
+		println("${node.key}: ${node.value}")
+	}
+
+	val removedValue = tree.remove(40)
+	println(removedValue) // forty
+}
+```
+
+To use the ordinary binary search tree, only the implementation changes:
+
+```kotlin
+import io.vloikov.searchtrees.bst.BinarySearchTree
+
+val tree = BinarySearchTree<Int, String>()
+```
+
+### Common API
+
+| Operation | Behavior |
+|---|---|
+| `insert(key, value)` | Inserts a new node or replaces an existing value; returns the previous value or `null` |
+| `remove(key)` | Removes a node; returns the removed value or `null` |
+| `find(key)` | Returns a read-only `TreeNode`, or `null` when the key is absent |
+| `key in tree` | Checks whether an equivalent key exists |
+| `min()` / `max()` | Returns the node with the smallest or largest key |
+| `size` / `isEmpty()` | Reports the current number of nodes and whether the tree is empty |
+| `iterator()` | Iterates over nodes in ascending key order |
+| `keys()` / `values()` | Returns lazy sequences ordered by key |
+
+When `V` is nullable, a `null` mutation result may mean either that no previous value existed or that the stored value
+was itself `null`. Use `contains` first when this distinction matters.
+
+## Build and verification
+
+The project keeps local checks and GitHub Actions aligned through the `ci` Gradle task.
+
+| Command | Purpose |
+|---|---|
+| `./gradlew test` | Runs all unit tests |
+| `./gradlew ci` | Runs the complete verification pipeline used by CI |
+| `./gradlew ktlintCheck` | Checks Kotlin formatting |
+| `./gradlew formatCode` | Formats Kotlin sources with ktlint |
+| `./gradlew detekt` | Runs static analysis |
+| `./gradlew koverHtmlReport` | Generates the HTML coverage report |
+| `./gradlew dokkaGenerateHtml` | Generates API documentation from KDoc |
+| `./gradlew assemble` | Builds the library artifacts |
+
+Generated reports are available locally at:
+
+- tests: `build/reports/tests/test/index.html`;
+- coverage: `build/reports/kover/html/index.html`;
+- API documentation: `build/dokka/html/index.html`.
+
+## Continuous integration
+
+The [GitHub Actions pipeline](https://github.com/vlloikov/search-trees/actions/workflows/build.yml) runs for every pull
+request and every push to `main`. It is split into dedicated jobs for:
+
+1. code quality with ktlint and Detekt;
+2. unit tests and a Kover coverage report;
+3. Dokka API documentation;
+4. final artifact assembly.
+
+Coverage and documentation are uploaded as workflow artifacts, while failures in quality checks or tests block the
+dependent jobs.
+
+## Project structure
+
+```text
+src/main/kotlin/io/vloikov/searchtrees/
+├── SearchTree.kt
+├── TreeNode.kt
+├── bst/
+├── avl/
+└── redblack/
+
+src/test/kotlin/io/vloikov/searchtrees/
+├── bst/
+└── avl/
+
+config/detekt/          Detekt configuration
+docs/                   Architecture documentation
+.github/workflows/      Continuous integration
+```
+
+The public contract, package layout, class diagrams, operation semantics, and encapsulation decisions are described in
+[the architecture document](docs/architecture.md).
+
+## Roadmap
+
+- [x] Define the common architecture and public API.
+- [x] Implement and test `BinarySearchTree`.
+- [x] Implement, balance, and test `AvlTree`.
+- [ ] Implement and test `RedBlackTree`.
+- [ ] Complete the project specification and release `1.0.0`.
 
 ## License
 
-This project is distributed under the [MIT License](LICENSE).
+This project is available under the [MIT License](LICENSE).
