@@ -333,6 +333,112 @@ class AvlTreeTest {
 		assertAvlInvariant(tree.root)
 	}
 
+	@Test
+	fun iteratorIsEmptyForEmptyTree() {
+		val tree = AvlTree<Int, String>()
+
+		assertTrue(tree.toList().isEmpty())
+	}
+
+	@Test
+	fun iteratorReturnsOnlyNode() {
+		val tree = AvlTree<Int, String>()
+		tree.insert(10, "root")
+
+		val nodes = tree.toList()
+
+		assertEquals(listOf(10), nodes.map { node -> node.key })
+		assertEquals(listOf("root"), nodes.map { node -> node.value })
+	}
+
+	@Test
+	fun iteratorReturnsNodesInAscendingKeyOrderAfterRotations() {
+		val tree = AvlTree<Int, String>()
+		listOf(30, 10, 20, 40, 35, 50, 5, 15, 25, 45).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+
+		val nodes = tree.toList()
+
+		assertEquals(
+			listOf(5, 10, 15, 20, 25, 30, 35, 40, 45, 50),
+			nodes.map { node -> node.key },
+		)
+		assertEquals(
+			listOf("5", "10", "15", "20", "25", "30", "35", "40", "45", "50"),
+			nodes.map { node -> node.value },
+		)
+	}
+
+	@Test
+	fun iteratorWorksAfterBalancedRemoval() {
+		val tree = AvlTree<Int, String>()
+		listOf(4, 2, 5, 1, 3).forEach { key ->
+			tree.insert(key, key.toString())
+		}
+		tree.remove(5)
+
+		assertEquals(
+			listOf(1, 2, 3, 4),
+			tree.map { node -> node.key },
+		)
+		assertAvlInvariant(tree.root)
+	}
+
+	@Test
+	fun iteratorContainsSingleNodeAfterValueReplacement() {
+		val tree = AvlTree<Int, String>()
+		tree.insert(10, "old")
+		tree.insert(10, "new")
+
+		val nodes = tree.toList()
+
+		assertEquals(1, nodes.size)
+		assertEquals(10, nodes.single().key)
+		assertEquals("new", nodes.single().value)
+	}
+
+	@Test
+	fun keysAndValuesAreEmptyForEmptyTree() {
+		val tree = AvlTree<Int, String>()
+
+		assertTrue(tree.keys().toList().isEmpty())
+		assertTrue(tree.values().toList().isEmpty())
+	}
+
+	@Test
+	fun keysAndValuesFollowAscendingKeyOrderAfterRotations() {
+		val tree = AvlTree<Int, String>()
+		tree.insert(30, "thirty")
+		tree.insert(10, "ten")
+		tree.insert(20, "twenty")
+		tree.insert(40, "forty")
+		tree.insert(50, "fifty")
+
+		assertEquals(
+			listOf(10, 20, 30, 40, 50),
+			tree.keys().toList(),
+		)
+		assertEquals(
+			listOf("ten", "twenty", "thirty", "forty", "fifty"),
+			tree.values().toList(),
+		)
+	}
+
+	@Test
+	fun keysAndValuesReflectRemovalAndReplacement() {
+		val tree = AvlTree<Int, String>()
+		tree.insert(20, "old")
+		tree.insert(10, "ten")
+		tree.insert(30, "thirty")
+
+		tree.insert(20, "new")
+		tree.remove(10)
+
+		assertEquals(listOf(20, 30), tree.keys().toList())
+		assertEquals(listOf("new", "thirty"), tree.values().toList())
+	}
+
 	private fun assertBalancedThreeNodeTree(tree: AvlTree<Int, String>) {
 		val root = assertNotNull(tree.root)
 

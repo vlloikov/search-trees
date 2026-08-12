@@ -62,11 +62,26 @@ public class AvlTree<K : Comparable<K>, V> : SearchTree<K, V> {
 		return removedValue
 	}
 
-	override fun keys(): Sequence<K> = TODO("Implemented during stage 2")
+	override fun keys(): Sequence<K> = asSequence().map { node -> node.key }
 
-	override fun values(): Sequence<V> = TODO("Implemented during stage 2")
+	override fun values(): Sequence<V> = asSequence().map { node -> node.value }
 
-	override fun iterator(): Iterator<TreeNode<K, V>> = TODO("Implemented during stage 2")
+	override fun iterator(): Iterator<TreeNode<K, V>> =
+		sequence<TreeNode<K, V>> {
+			val stack = ArrayDeque<AvlNode<K, V>>()
+			var current = root
+
+			while (current != null || stack.isNotEmpty()) {
+				while (current != null) {
+					stack.addLast(current)
+					current = current.left
+				}
+
+				val node = stack.removeLast()
+				yield(node)
+				current = node.right
+			}
+		}.iterator()
 
 	private fun insertNode(
 		node: AvlNode<K, V>?,
