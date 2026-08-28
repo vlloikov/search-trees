@@ -69,7 +69,22 @@ public class RedBlackTree<K : Comparable<K>, V> : SearchTree<K, V> {
 		return null
 	}
 
-	override fun remove(key: K): V? = TODO("Implemented during stage 2")
+	override fun remove(key: K): V? {
+		val removedNode = findNode(key) ?: return null
+		val removedValue = removedNode.value
+		val context = deleteNode(removedNode)
+
+		if (context.removedColor == RedBlackNode.Color.BLACK) {
+			balanceAfterRemove(context.replacement, context.replacementParent)
+		}
+
+		removedNode.left = null
+		removedNode.right = null
+		removedNode.parent = null
+		size--
+
+		return removedValue
+	}
 
 	override fun keys(): Sequence<K> = TODO("Implemented during stage 2")
 
@@ -182,6 +197,153 @@ public class RedBlackTree<K : Comparable<K>, V> : SearchTree<K, V> {
 		return current
 	}
 
+	private fun deleteNode(node: RedBlackNode<K, V>): RemovalContext<K, V> =
+		when {
+			node.left == null -> replaceNodeWithChild(node, node.right)
+			node.right == null -> replaceNodeWithChild(node, node.left)
+			else -> replaceNodeWithSuccessor(node)
+		}
+
+	private fun replaceNodeWithChild(
+		node: RedBlackNode<K, V>,
+		child: RedBlackNode<K, V>?,
+	): RemovalContext<K, V> {
+		val parent = node.parent
+		val removedColor = node.color
+
+		transplant(node, child)
+
+		return RemovalContext(child, parent, removedColor)
+	}
+
+	private fun replaceNodeWithSuccessor(node: RedBlackNode<K, V>): RemovalContext<K, V> {
+		val successor = minimumNode(checkNotNull(node.right))
+		val removedColor = successor.color
+		val replacement = successor.right
+		val replacementParent: RedBlackNode<K, V>?
+
+		if (successor.parent === node) {
+			replacementParent = successor
+			replacement?.parent = successor
+		} else {
+			replacementParent = successor.parent
+			transplant(successor, replacement)
+			successor.right = node.right
+			successor.right?.parent = successor
+		}
+
+		transplant(node, successor)
+		successor.left = node.left
+		successor.left?.parent = successor
+		successor.color = node.color
+
+		return RemovalContext(replacement, replacementParent, removedColor)
+	}
+
+	private fun transplant(
+		node: RedBlackNode<K, V>,
+		replacement: RedBlackNode<K, V>?,
+	) {
+		val parent = node.parent
+
+		when {
+			parent == null -> root = replacement
+			node === parent.left -> parent.left = replacement
+			else -> parent.right = replacement
+		}
+
+		replacement?.parent = parent
+	}
+
+	private fun balanceAfterRemove(
+		node: RedBlackNode<K, V>?,
+		nodeParent: RedBlackNode<K, V>?,
+	) {
+		var current = node
+		var parent = current?.parent ?: nodeParent
+
+		while (current !== root && colorOf(current) == RedBlackNode.Color.BLACK && parent != null) {
+			val currentParent = checkNotNull(parent)
+			val state =
+				if (current === currentParent.left) {
+					balanceLeftRemoval(currentParent)
+				} else {
+					balanceRightRemoval(currentParent)
+				}
+
+			current = state.first
+			parent = state.second
+		}
+
+		current?.color = RedBlackNode.Color.BLACK
+	}
+
+	private fun balanceLeftRemoval(parent: RedBlackNode<K, V>): Pair<RedBlackNode<K, V>?, RedBlackNode<K, V>?> {
+		var sibling = parent.right
+
+		if (colorOf(sibling) == RedBlackNode.Color.RED) {
+			sibling?.color = RedBlackNode.Color.BLACK
+			parent.color = RedBlackNode.Color.RED
+			rotateLeft(parent)
+			sibling = parent.right
+		}
+
+		return if (
+			colorOf(sibling?.left) == RedBlackNode.Color.BLACK &&
+			colorOf(sibling?.right) == RedBlackNode.Color.BLACK
+		) {
+			sibling?.color = RedBlackNode.Color.RED
+			parent to parent.parent
+		} else {
+			if (colorOf(sibling?.right) == RedBlackNode.Color.BLACK) {
+				sibling?.left?.color = RedBlackNode.Color.BLACK
+				sibling?.color = RedBlackNode.Color.RED
+				sibling?.let { node -> rotateRight(node) }
+				sibling = parent.right
+			}
+
+			sibling?.color = parent.color
+			parent.color = RedBlackNode.Color.BLACK
+			sibling?.right?.color = RedBlackNode.Color.BLACK
+			rotateLeft(parent)
+			root to null
+		}
+	}
+
+	private fun balanceRightRemoval(parent: RedBlackNode<K, V>): Pair<RedBlackNode<K, V>?, RedBlackNode<K, V>?> {
+		var sibling = parent.left
+
+		if (colorOf(sibling) == RedBlackNode.Color.RED) {
+			sibling?.color = RedBlackNode.Color.BLACK
+			parent.color = RedBlackNode.Color.RED
+			rotateRight(parent)
+			sibling = parent.left
+		}
+
+		return if (
+			colorOf(sibling?.left) == RedBlackNode.Color.BLACK &&
+			colorOf(sibling?.right) == RedBlackNode.Color.BLACK
+		) {
+			sibling?.color = RedBlackNode.Color.RED
+			parent to parent.parent
+		} else {
+			if (colorOf(sibling?.left) == RedBlackNode.Color.BLACK) {
+				sibling?.right?.color = RedBlackNode.Color.BLACK
+				sibling?.color = RedBlackNode.Color.RED
+				sibling?.let { node -> rotateLeft(node) }
+				sibling = parent.left
+			}
+
+			sibling?.color = parent.color
+			parent.color = RedBlackNode.Color.BLACK
+			sibling?.left?.color = RedBlackNode.Color.BLACK
+			rotateRight(parent)
+			root to null
+		}
+	}
+
+	private fun colorOf(node: RedBlackNode<K, V>?): RedBlackNode.Color = node?.color ?: RedBlackNode.Color.BLACK
+
 	private fun rotateLeft(node: RedBlackNode<K, V>) {
 		val pivot = node.right ?: return
 
@@ -219,4 +381,10 @@ public class RedBlackTree<K : Comparable<K>, V> : SearchTree<K, V> {
 		pivot.right = node
 		node.parent = pivot
 	}
+
+	private data class RemovalContext<K : Comparable<K>, V>(
+		val replacement: RedBlackNode<K, V>?,
+		val replacementParent: RedBlackNode<K, V>?,
+		val removedColor: RedBlackNode.Color,
+	)
 }
