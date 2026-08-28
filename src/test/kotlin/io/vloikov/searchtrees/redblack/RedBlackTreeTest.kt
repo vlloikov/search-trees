@@ -312,6 +312,66 @@ class RedBlackTreeTest {
 		assertNull(tree.root)
 	}
 
+	@Test
+	fun iteratorIsEmptyForEmptyTree() {
+		val tree = RedBlackTree<Int, String>()
+
+		assertTrue(tree.toList().isEmpty())
+	}
+
+	@Test
+	fun iteratorReturnsNodesInAscendingOrderAfterBalancing() {
+		val tree = RedBlackTree<Int, String>()
+		val keys = listOf(41, 38, 31, 12, 19, 8, 50, 60, 55, 1, 7, 6)
+
+		keys.forEach { key -> tree.insert(key, "value-$key") }
+
+		val nodes = tree.toList()
+
+		assertEquals(keys.sorted(), nodes.map { node -> node.key })
+		assertEquals(keys.sorted().map { key -> "value-$key" }, nodes.map { node -> node.value })
+		assertRedBlackInvariant(tree)
+	}
+
+	@Test
+	fun iteratorWorksAfterBalancedRemoval() {
+		val tree = RedBlackTree<Int, String>()
+		val keys = listOf(20, 10, 30, 5, 15, 25, 40, 1, 7, 35, 50)
+
+		keys.forEach { key -> tree.insert(key, key.toString()) }
+		listOf(20, 5, 40).forEach { key -> tree.remove(key) }
+
+		assertEquals(
+			listOf(1, 7, 10, 15, 25, 30, 35, 50),
+			tree.map { node -> node.key },
+		)
+		assertRedBlackInvariant(tree)
+	}
+
+	@Test
+	fun keysAndValuesAreEmptyForEmptyTree() {
+		val tree = RedBlackTree<Int, String>()
+
+		assertTrue(tree.keys().toList().isEmpty())
+		assertTrue(tree.values().toList().isEmpty())
+	}
+
+	@Test
+	fun keysAndValuesReflectReplacementAndRemoval() {
+		val tree = RedBlackTree<Int, String>()
+		tree.insert(20, "old")
+		tree.insert(10, "ten")
+		tree.insert(30, "thirty")
+		tree.insert(25, "twenty-five")
+
+		tree.insert(20, "new")
+		tree.remove(10)
+
+		assertEquals(listOf(20, 25, 30), tree.keys().toList())
+		assertEquals(listOf("new", "twenty-five", "thirty"), tree.values().toList())
+		assertRedBlackInvariant(tree)
+	}
+
 	private fun assertBalancedThreeNodeTree(tree: RedBlackTree<Int, String>) {
 		assertEquals(20, tree.root?.key)
 		assertEquals(10, tree.root?.left?.key)
