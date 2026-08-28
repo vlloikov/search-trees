@@ -3,7 +3,7 @@
 [![Build Pipeline](https://github.com/vlloikov/search-trees/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/vlloikov/search-trees/actions/workflows/build.yml)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![JVM](https://img.shields.io/badge/JVM-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
-[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/vlloikov/search-trees)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue)](https://github.com/vlloikov/search-trees)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A Kotlin/JVM library that implements binary search trees behind a shared, type-safe API. Trees store unique key-value
@@ -11,17 +11,17 @@ pairs, order keys through `Comparable`, and expose structural nodes as read-only
 
 ## Project status
 
-Version `0.3.0` includes complete implementations of an unbalanced binary search tree and a height-balanced AVL tree.
-The red-black tree is the final planned implementation before the `1.0.0` release.
+Version `0.4.0` includes complete implementations of an unbalanced binary search tree, a height-balanced AVL tree,
+and a red-black tree.
 
 | Implementation | Status | Height | Search, insertion, removal |
 |---|---|---:|---:|
 | `BinarySearchTree` | Implemented | `O(h)`, up to `O(n)` | `O(h)` |
 | `AvlTree` | Implemented | `O(log n)` | `O(log n)` |
-| `RedBlackTree` | Planned | `O(log n)` | `O(log n)` |
+| `RedBlackTree` | Implemented | `O(log n)` | `O(log n)` |
 
-`RedBlackTree` currently contains the agreed public skeleton and is not yet ready for use. The project remains in
-pre-`1.0` development until all three implementations are complete.
+All three trees support the shared public API and ordered traversal. The project remains in pre-`1.0` development
+while the architecture is reviewed, duplicated implementation logic is evaluated, and the public API is stabilized.
 
 ## Features
 
@@ -31,7 +31,8 @@ pre-`1.0` development until all three implementations are complete.
 - unique keys determined by `Comparable.compareTo`;
 - read-only public `TreeNode` views with balancing details kept internal;
 - AVL rotations and height restoration after insertion and removal;
-- unit tests for public behavior, structural cases, and AVL invariants;
+- red-black recoloring and rotations after insertion and removal;
+- unit tests for public behavior, structural cases, and balancing invariants;
 - automated formatting, static analysis, testing, coverage, documentation, and assembly.
 
 ## Technology stack
@@ -102,6 +103,14 @@ import io.vloikov.searchtrees.bst.BinarySearchTree
 val tree = BinarySearchTree<Int, String>()
 ```
 
+The red-black tree is selected in the same way:
+
+```kotlin
+import io.vloikov.searchtrees.redblack.RedBlackTree
+
+val tree = RedBlackTree<Int, String>()
+```
+
 ### Common API
 
 | Operation | Behavior |
@@ -164,7 +173,8 @@ src/main/kotlin/io/vloikov/searchtrees/
 
 src/test/kotlin/io/vloikov/searchtrees/
 ├── bst/
-└── avl/
+├── avl/
+└── redblack/
 
 config/detekt/          Detekt configuration
 docs/                   Architecture documentation
@@ -179,7 +189,9 @@ The public contract, package layout, class diagrams, operation semantics, and en
 - [x] Define the common architecture and public API.
 - [x] Implement and test `BinarySearchTree`.
 - [x] Implement, balance, and test `AvlTree`.
-- [ ] Implement and test `RedBlackTree`.
+- [x] Implement, balance, and test `RedBlackTree`.
+- [ ] Add shared contract and cross-implementation tests.
+- [ ] Review duplicated logic and stabilize the architecture and public API.
 - [ ] Complete the project specification and release `1.0.0`.
 
 ## License
